@@ -1,0 +1,25 @@
+name: github-actions-to-aws  # 任意のワークフロー名(処理名)
+on: push  # on:push = ファイルがプッシュ(更新)されるごとに処理を動かす
+
+jobs:
+  run-container: # job名は任意。ワークフローを起動させるための設定
+    name: run  # 任意の関数名
+    runs-on: ubuntu-latest  # 個人のアカウントの場合は「ubuntu-latest」などを設定
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout  # 関数名は任意
+        uses: actions/checkout@v3
+        
+      - name: Configure AWS credentials  # 関数名は任意。AWS環境にアクセスする
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}  # 先ほど作成したSecretsを指定
+          aws-region: ap-northeast-1  # Assume roleを行うリージョンを指定
+
+      - name: CLI-install  # 関数名は任意。CLIのインストールを行う
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
