@@ -1,22 +1,25 @@
-name: github-actions-to-aws  # 任意のワークフロー名(処理名)
-on: push  # on:push = ファイルがプッシュ(更新)されるごとに処理を動かす
+name: github-actions-to-aws
+
+on: push
 
 jobs:
-  run-container: # job名は任意。ワークフローを起動させるための設定
-    name: run  # 任意の関数名
-    runs-on: ubuntu-latest  # 個人のアカウントの場合は「ubuntu-latest」などを設定
+  run-container:
+    name: run
+    runs-on: ubuntu-latest
+
     permissions:
       id-token: write
       contents: write
+
     steps:
-      - name: Checkout  # 関数名は任意
+      - name: Checkout
         uses: actions/checkout@v3
-        
-      - name: Configure AWS credentials  # 関数名は任意。AWS環境にアクセスする
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}  # 先ほど作成したSecretsを指定
-          aws-region: ap-northeast-1  # Assume roleを行うリージョンを指定
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
 
       - name: Check AWS Identity
         run: aws sts get-caller-identity
@@ -26,7 +29,13 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
+      - name: Configure CodeCommit Credential Helper
+        run: |
+          git config --global credential.helper '!aws codecommit credential-helper $@'
+          git config --global credential.UseHttpPath true
+
       - name: Push to CodeCommit
         run: |
+          git remote remove codecommit || true
           git remote add codecommit https://git-codecommit.ap-northeast-1.amazonaws.com/v1/repos/pmwb_test_saito
-          git push codecommit main
+          git push codecommit HEAD:main
